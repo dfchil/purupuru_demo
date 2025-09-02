@@ -1,7 +1,7 @@
-TARGET = drxlax.elf
+TARGET = purudemo.elf
 KOS_CPPSTD	:= -std=c++20
 KOS_CCSTD	:= -std=gnu11
-ROMDIR=cdrom/drxlax
+ROMDIR=cdrom/purudemo
 CC=kos-cc
 
 
