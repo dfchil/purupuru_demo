@@ -20,6 +20,15 @@ int dc_ctrlrs_map_state(void) {
       state_backups[i] = *state;
       ctrlr_states_refs[i]->state = state_backups + i;
 
+      // if (i == 0) {
+      //   DEBUG_PRINT("controller buttons: %x\n", (void*)state->buttons);
+      //   print_bits(state->buttons);
+      //   DEBUG_PRINT("\njoyx: %d\n", state->joyx);
+      //   DEBUG_PRINT("joyx: %d\n", state->joyy);
+      //   DEBUG_PRINT("ltrig: %d\n", state->ltrig);
+      //   DEBUG_PRINT("rtrigt: %d\n", state->rtrig);
+      // }
+
       if (state) {
         cont_state_onto_ctrlstate(state, ctrlr_states_refs[i]);
         ctrlr_states_refs[i]->portnum = i;

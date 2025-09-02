@@ -39,6 +39,8 @@ int main(__unused int argc, __unused char **argv) {
   pvr_set_bg_color(0.0, 0.0, 24.0f / 255.0f);
   pvr_init(&pvr_params);
   rumble_queues_init();
+  
+
   core_loop();
   rumble_queues_shutdown();
   pvr_shutdown();

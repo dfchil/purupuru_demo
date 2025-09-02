@@ -4,6 +4,8 @@
 #include <drxlax/render/core.h>
 #include <stdio.h>
 
+#include <dc/maple/purupuru.h>
+
 static struct {
   uint32_t end_of_sequence : 1;
   uint32_t shut_down : 1;
@@ -31,13 +33,31 @@ int check_c1_exit(void) {
   return 0;
 }
 
+
+static uint32_t expected_controllers = 0;
+
+
 void core_loop(void) {
+
+  dc_ctrlrs_map_state();
+  controller_state_t **cstates = get_ctrlr_states();
+  for(int i = 0; i < MAPLE_PORT_COUNT; i++) {
+    if(cstates[i]) {
+      expected_controllers |= (1 << i);
+    }
+  }
+  printf("Expecting controllers on ports: ");
+  for(int i = 0; i < MAPLE_PORT_COUNT; i++) {
+    if((1 << i) & expected_controllers) {
+      printf("%d ", i);
+    }
+  }
+  printf("\n");
+
   while (1) {
     framenum++;
-    
-    
     dc_ctrlrs_map_state();
-    controller_state_t **cstates = get_ctrlr_states();
+    cstates = get_ctrlr_states();
     for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
       if (detect_shutdown_combo(cstates[i])) {
         core_flag_shutdown();
@@ -47,31 +67,19 @@ void core_loop(void) {
       break;
     }
     if (framenum % 31 == 0) {
-      printf("frame: %lu\n", framenum);
-      rumble_fields_t fx = {.raw = 0x00072010};
-      fx.fx1_intensity = framenum % 8;
-      rumble_queued(0, fx.raw);
+      for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
+        if (cstates[i]) {
+          // printf("ctrlr %d frame: %lu\n", i, framenum);
+          purupuru_effect_t fx = {.raw = 0x00072010};
+          // fx.fx1_intensity = framenum % 8;
+          rumble_queued(i, fx.raw);
+        }
+      }
     }
-    
+
     for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
-      controller_state_t *cstate = get_ctrlr_states()[i];
-      if (cstate) {
-        if (cstate->state->rtrig > 255) {
-          printf("rtrig: %d\n", cstate->state->rtrig);
-        }
-        if (cstate->state->ltrig > 255) {
-          printf("ltrig: %d\n", cstate->state->ltrig);
-        }
-        if (cstate->state->joyx > 127) {
-          printf("joyx: %d\n", cstate->state->joyx);
-        }
-        if (cstate->state->joyy > 127) {
-          printf("joyy: %d\n", cstate->state->joyy);
-        }
-  
-        if (cstate->state->buttons != 0) {
-          printf("buttons: %x\n", cstate->state->buttons);
-        }
+      if (((1 << i) & expected_controllers) && !cstates[i]) {
+        printf("Warning: Expected controller %d but not found in frame %lu!\n", i, framenum);
       }
     }
     render_frame();

@@ -34,6 +34,10 @@ static void *_rfx_consumer(void *arg) {
   return NULL;
 }
 void rumble_queued(uint32_t ctrloffset, uint32_t raw) {
+  maple_device_t *dev = maple_port_type(ctrloffset, MAPLE_FUNC_PURUPURU);
+  // print_rumble_fields((purupuru_effect_t){.raw = raw});
+  // purupuru_rumble_raw(dev, raw);
+  // return;
   if (_rfx_queue_heads[ctrloffset] - _rfx_queue_tails[ctrloffset] ==
       RFX_QUEUE_SIZE) {
     return;
@@ -64,22 +68,30 @@ void rumble_queues_shutdown(void) {
   }
 }
 
-void print_rumble_fields(uint32_t raw) {
-  rumble_fields_t fields = {.raw = raw};
+void print_rumble_fields(purupuru_effect_t fields) {
   printf("Rumble Fields:\n");
+  printf("-- 1st byte ---------------------------\n");
+  printf("  .cont  (0:0)   =  %s,\n", fields.cont ? "true" : "false");
+  printf("  .res   (0:1-3)   =  %u,\n", fields.res);
+  printf("  .motor (0:4-7)  =  %u,\n", fields.motor);
+  printf("-- 2nd byte ---------------------------\n");
+  printf("  .bpow  (1:0-2)  =  %u,\n", fields.bpow);
+  printf("  .div   (1:3)    =  %s,\n", fields.div ? "true" : "false");
+  printf("  .fpow  (1:4-6)   =  %u,\n", fields.fpow);
+  printf("  .conv  (1:7)    =  %s,\n", fields.conv ? "true" : "false");
+  printf("-- 3rd byte ---------------------------\n");
+  printf("  .freq  (2:0-7)  =  %u,\n", fields.freq);
+  printf("-- 4th byte ---------------------------\n");
+  printf("  .inc   (3:0-7)   =  %u,\n", fields.inc);
+  printf("-------------------------------------\n");
 
-  printf("  .special_pulse   =  %u,\n", fields.special_pulse);
-  printf("  .special_motor1  =  %u,\n", fields.special_motor1);
-  printf("  .special_motor2  =  %u,\n", fields.special_motor2);
-
-  printf("  .fx1_pulse:      =  %u,\n", fields.fx1_pulse);
-  printf("  .fx1_powersave:  =  %u,\n", fields.fx1_powersave);
-  printf("  .fx1_intensity:  =  %u,\n", fields.fx1_intensity);
-
-  printf("  .fx2_lintensity: =  %u,\n", fields.fx2_lintensity);
-  printf("  .fx2_pulse:      =  %u,\n", fields.fx2_pulse);
-  printf("  .fx2_uintensity: =  %u,\n", fields.fx2_uintensity);
-  printf("  .fx2_decay:      =  %u,\n", fields.fx2_decay);
-
-  printf("  .duration:       =  %u,\n", fields.duration);
+  unsigned char cmdbits[9 * 4] = {0};
+  for (int bidx = 0; bidx < 4; bidx++) {
+    for (int j = 0; j < 8; j++) {
+      cmdbits[bidx * 9 + (7-j)] = '0' + ((fields.raw >> (bidx * 8 + j)) & 1);
+    }
+    cmdbits[(3 - bidx) * 9 + 8] = '\n';
+  }
+  cmdbits[9 * 4 - 1] = 0;
+  printf("  four byte pattern:\n%s\n", cmdbits);
 }
