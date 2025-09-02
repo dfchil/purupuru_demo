@@ -38,7 +38,6 @@ static uint32_t expected_controllers = 0;
 
 
 void core_loop(void) {
-
   dc_ctrlrs_map_state();
   controller_state_t **cstates = get_ctrlr_states();
   for(int i = 0; i < MAPLE_PORT_COUNT; i++) {
@@ -49,7 +48,7 @@ void core_loop(void) {
   printf("Expecting controllers on ports: ");
   for(int i = 0; i < MAPLE_PORT_COUNT; i++) {
     if((1 << i) & expected_controllers) {
-      printf("%d ", i);
+      printf("%c ", 'A' + i);
     }
   }
   printf("\n");
@@ -79,8 +78,8 @@ void core_loop(void) {
 
     for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
       if (((1 << i) & expected_controllers) && !cstates[i]) {
-        printf("Warning: Expected controller %d but not found in frame %lu!\n", i, framenum);
-      }
+        printf("Warning: Expected controller %c but not found in frame %lu!\n", 'A' + i, framenum);
+      } 
     }
     render_frame();
   }
