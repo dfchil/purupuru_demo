@@ -1,0 +1,8 @@
+*.o
+*.dt
+*.dt.pal
+*.elf
+cdrom/drxlax/texture
+cdrom/drxlax/sfx
+*.cdi
+.vscode/launch.json
