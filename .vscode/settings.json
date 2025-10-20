@@ -88,6 +88,7 @@
 		"thread.h": "c",
 		"sem.h": "c",
 		"pthread.h": "c",
-		"matrix3d.h": "c"
+		"matrix3d.h": "c",
+		"random": "c"
 	}
 }
