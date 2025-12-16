@@ -1,5 +1,6 @@
 #include <dc/maple.h>
 #include <enDjinn/enj_enDjinn.h>
+#include <dc/video.h>
 
 typedef struct {
   uint32_t framenum;
@@ -22,7 +23,8 @@ void render(void *data) {
   if (rt_state->framenum % 31 == 0) {
     for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
       if (cstates[i] && rumblers[i]) {
-        enj_rumbler_set_effect(i, 0x00072010);
+        // enj_rumbler_set_effect(i, 0x00072010);
+        enj_rumbler_set_effect(i, 0x011a1010);
       }
     }
   }
@@ -31,11 +33,11 @@ void render(void *data) {
   int ypos = 10;
 
   xpos += enj_qfont_write("Expected Controllers This Run: ", xpos, ypos,
-                          PVR_LIST_TR_POLY);
+                          PVR_LIST_PT_POLY);
   for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
     if (1 << i & rt_state->expected_controllers) {
-      char buf[3] = {'A' + i,' ', '\0'};
-      xpos += enj_qfont_write(buf, xpos, ypos, PVR_LIST_TR_POLY);
+      char buf[3] = {'A' + i, ' ', '\0'};
+      xpos += enj_qfont_write(buf, xpos, ypos, PVR_LIST_PT_POLY);
     }
   }
 
@@ -44,25 +46,44 @@ void render(void *data) {
 
   for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
     if (((1 << i) & rt_state->expected_controllers) && !cstates[i]) {
-      enj_qfont_get_sprite_hdr()->argb = 0xffff0000;  // red for errors
+      enj_qfont_get_sprite_hdr()->argb = 0xffff0000; // red for errors
       printf("Warning: Expected controller %c but not found in frame %lu!\n",
              'A' + i, rt_state->framenum);
       char errstr[] = "Controller X missing!";
       errstr[11] = 'A' + i;
-      enj_qfont_write(errstr, xpos, ypos, PVR_LIST_TR_POLY);
+      enj_qfont_write(errstr, xpos, ypos, PVR_LIST_PT_POLY);
       ypos += enj_qfont_get_header()->line_height;
     }
   }
   if (ypos == 140) {
-    enj_qfont_get_sprite_hdr()->argb = 0xff00ff00;  // green for success
+    enj_qfont_get_sprite_hdr()->argb = 0xff00ff00; // green for success
     enj_qfont_write("All expected controllers connected.", xpos, ypos,
-                    PVR_LIST_TR_POLY);
+                    PVR_LIST_PT_POLY);
+    ypos += enj_qfont_get_header()->line_height * 3;
   }
+
+  if (cstates[0] != NULL) {
+
+    if (cstates[0]->buttons.A != BUTTON_DOWN) {
+      enj_qfont_write("Button A on controller A not pressed!", xpos, ypos,
+                      PVR_LIST_PT_POLY);
+    }
+    enj_qfont_write("+", cstates[0]->joyx + (vid_mode->width>>1), cstates[0]->joyy + (vid_mode->height>>1),
+                    PVR_LIST_PT_POLY);
+
+  } else if (cstates[0] != NULL) {
+    enj_qfont_write("Button A on controller A is pressed.", xpos, ypos,
+                    PVR_LIST_PT_POLY);
+  }
+
+
+
+
   rt_state->framenum++;
 }
 
 void main_mode_updater(void *data) {
-  enj_renderlist_add(PVR_LIST_TR_POLY, render, data);
+  enj_renderlist_add(PVR_LIST_PT_POLY, render, data);
 }
 
 int main(__unused int argc, __unused char **argv) {
