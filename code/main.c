@@ -24,8 +24,8 @@ void render(void *data) {
   if (rt_state->framenum % 31 == 0) {
     for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
       if (cstates[i] && rumblers[i]) {
-        // enj_rumbler_set_effect(i, 0x00072010);
-        enj_rumbler_set_effect(i, 0x011a1010);
+        enj_rumbler_set_effect(i, 0x00072010);
+        // enj_rumbler_set_effect(i, 0x011a1010);
       }
     }
   }
@@ -81,13 +81,13 @@ void render(void *data) {
   }
 
   int same_joy_values = 0;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 1; i < 10; i++) {
     if (rt_state->xy_joy_ringbuffer[(rt_state->framenum - i) % 10][0] == cstates[0]->joyx &&
         rt_state->xy_joy_ringbuffer[(rt_state->framenum - i) % 10][1] == cstates[0]->joyy) {
       same_joy_values++;
     }
   }
-  if (same_joy_values >= 3) {
+  if (same_joy_values >= 2) {
 
     ypos += enj_qfont_get_header()->line_height;
     enj_qfont_write("Joystick on controller A seems stuck!", xpos, ypos,
