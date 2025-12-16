@@ -1,48 +1,64 @@
-#include <dc/video.h>
-#include <drxlax/game/core.h>
-#include <drxlax/game/controller/rumble.h>
-#include <kos.h>
+#include <dc/maple.h>
+#include <enDjinn/enj_enDjinn.h>
 
-#ifdef DCPROF
-#include "../profilers/dcprof/profiler.h"
-#endif
+typedef struct {
+  uint32_t framenum;
+  uint32_t expected_controllers;
+} rumble_test_state_t;
 
-KOS_INIT_FLAGS(INIT_DEFAULT);
+void main_mode_updater(void *data) {
+  rumble_test_state_t *rt_state = (rumble_test_state_t *)data;
+  maple_device_t **rumblers = enj_rumbler_get_states();
+  enj_ctrlr_state_t **cstates = enj_ctrl_get_states();
 
-#ifdef DEBUG
-#include <arch/gdb.h>
-#endif
+  if (rt_state->framenum == 0) {
+    for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
+      if (cstates[i]) {
+        rt_state->expected_controllers |= (1 << i);
+      }
+    }
+  }
 
-#include <dc/pvr.h>
-#include <drxlax/game/core.h>
+  if (rt_state->framenum % 31 == 0) {
+    for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
+      if (cstates[i] && rumblers[i]) {
+        enj_rumbler_set_effect(i, 0x00072010);
+      }
+    }
+  }
 
-#ifdef DEBUG
-#include <dc/perf_monitor.h>
-#endif
+  for (int i = 0; i < MAPLE_PORT_COUNT; i++) {
+    if (((1 << i) & rt_state->expected_controllers) && !cstates[i]) {
+      printf("Warning: Expected controller %c but not found in frame %lu!\n",
+             'A' + i, rt_state->framenum);
+    }
 
-static pvr_init_params_t pvr_params = {
-    {PVR_BINSIZE_16, PVR_BINSIZE_16, PVR_BINSIZE_16, PVR_BINSIZE_16,
-     PVR_BINSIZE_0},
-    1024 * 1024,   // Vertex buffer size
-    0,             // No DMA
-    0, // Set horisontal FSAA
-    0,             // Translucent Autosort enabled.
-    3,             // Extra OPBs
-    0,             // No extra PTs
-};
+  }
+  rt_state->framenum++;
+}
 
 int main(__unused int argc, __unused char **argv) {
-#ifdef DEBUG
-  gdb_init();
-#endif
-  vid_set_mode(DM_640x480, PM_RGB888P);
-  pvr_set_bg_color(0.0, 0.0, 24.0f / 255.0f);
-  pvr_init(&pvr_params);
-  rumble_queues_init();
-  
+  enj_state_defaults();
+  // default soft-reset pattern is START + A + B + X + Y.
+  // Lets make it easier with just START
+  // START is offset 8<<1 (two bits per button)
+  enj_state_set_soft_reset(BUTTON_DOWN << (8 << 1));
 
-  core_loop();
-  rumble_queues_shutdown();
-  pvr_shutdown();
-  arch_exit();
+  if (enj_startup() != 0) {
+    ENJ_DEBUG_PRINT("enDjinn startup failed, exiting\n");
+    return -1;
+  }
+  rumble_test_state_t rt_state = {
+      .framenum = 0,
+  };
+
+  enj_mode_t main_mode = {
+      .name = "Main Mode",
+      .mode_updater = main_mode_updater,
+      .data = &rt_state,
+  };
+  enj_mode_push(&main_mode);
+  enj_run();
+
+  return 0;
 }
