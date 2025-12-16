@@ -32,6 +32,7 @@ void main_mode_updater(void *data) {
       printf("Warning: Expected controller %c but not found in frame %lu!\n",
              'A' + i, rt_state->framenum);
     }
+
   }
   rt_state->framenum++;
 }

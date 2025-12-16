@@ -1,1 +1,1 @@
-../enDjinn/Makefile.prime
+enDjinn/Makefile.prime
