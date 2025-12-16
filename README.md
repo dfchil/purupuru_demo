@@ -1,6 +1,17 @@
 ## This is: 
 Demonstration of some unexpected behaviour with KOS and purupuru packs (only tested with original SEGA packs).
 
+## Building
+This demo relies on the enDjinn framework which is integrated here as a submodule, the complete clone and building process becomes:
+
+```sh
+git clone git@github.com:dfchil/purupuru_demo.git
+cd purupuru_demo
+git submodule init
+git submodule update  
+make
+```
+
 ## Problem that needs fixing
 Sometimes when sending purupuru commands, it results in the controller being unreadable/unavailable for the following 4 frames.
 
