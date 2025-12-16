@@ -5,6 +5,7 @@
 typedef struct {
   uint32_t framenum;
   uint32_t expected_controllers;
+  int8_t xy_joy_ringbuffer[10][2];
 } rumble_test_state_t;
 
 void render(void *data) {
@@ -70,14 +71,28 @@ void render(void *data) {
     }
     enj_qfont_write("+", cstates[0]->joyx + (vid_mode->width>>1), cstates[0]->joyy + (vid_mode->height>>1),
                     PVR_LIST_PT_POLY);
-
+    rt_state->xy_joy_ringbuffer[rt_state->framenum % 10][0] =
+        cstates[0]->joyx;
+    rt_state->xy_joy_ringbuffer[rt_state->framenum % 10][1] =
+        cstates[0]->joyy;
   } else if (cstates[0] != NULL) {
     enj_qfont_write("Button A on controller A is pressed.", xpos, ypos,
                     PVR_LIST_PT_POLY);
   }
 
+  int same_joy_values = 0;
+  for (int i = 0; i < 10; i++) {
+    if (rt_state->xy_joy_ringbuffer[(rt_state->framenum - i) % 10][0] == cstates[0]->joyx &&
+        rt_state->xy_joy_ringbuffer[(rt_state->framenum - i) % 10][1] == cstates[0]->joyy) {
+      same_joy_values++;
+    }
+  }
+  if (same_joy_values >= 3) {
 
-
+    ypos += enj_qfont_get_header()->line_height;
+    enj_qfont_write("Joystick on controller A seems stuck!", xpos, ypos,
+                    PVR_LIST_PT_POLY);
+  }
 
   rt_state->framenum++;
 }
